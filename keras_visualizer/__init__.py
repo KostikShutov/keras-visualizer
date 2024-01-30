@@ -19,7 +19,7 @@ def visualizer(model, file_name='graph', file_format=None, view=False, settings=
 
     main_settings = {
         # ALL LAYERS
-        'MAX_NEURONS': 10,
+        'NEURONS_PERCENTAGE': 20,
         'ARROW_COLOR': '#707070',
         # INPUT LAYERS
         'INPUT_DENSE_COLOR': '#2ecc71',
@@ -52,7 +52,7 @@ def visualizer(model, file_name='graph', file_format=None, view=False, settings=
     }
 
     settings = {**main_settings, **settings} if settings is not None else {**main_settings}
-    max_neurons = settings['MAX_NEURONS']
+    neurons_percentage = settings['NEURONS_PERCENTAGE']
 
     input_layer = 0
     hidden_layers_nr = 0
@@ -94,9 +94,6 @@ def visualizer(model, file_name='graph', file_format=None, view=False, settings=
             if layer.__class__.__name__ == 'Dense':
                 input_units = layer.input_shape[1]
                 label_dense_input = f'Входные нейроны: {input_units}'
-                if max_neurons is not None and input_units > max_neurons:
-                    label_dense_input += f' (+{input_units - max_neurons} еще)'
-                    input_layer = max_neurons
                 label_dense_input += f'\nФункция активации: {layer.get_config()["activation"]}'
                 c.attr(color='white')
                 for i in range(0, input_layer):
@@ -147,9 +144,11 @@ def visualizer(model, file_name='graph', file_format=None, view=False, settings=
                     # If hidden_layers[i] > MAX_NEURONS, dont include all
                     units = model.layers[i].output_shape[1]
                     label_dense = f'Нейроны: {units}'
-                    if max_neurons is not None and units > max_neurons:
-                        label_dense += f' (+{units - max_neurons} еще)'
-                        hidden_layers[i] = max_neurons
+                    if neurons_percentage is not None:
+                        max_neurons = round(units * (neurons_percentage / 100))
+                        if units > max_neurons:
+                            label_dense += f' (+{units - max_neurons} еще)'
+                            hidden_layers[i] = max_neurons
                     label_dense += f'\nФункция активации: {model.layers[i].get_config()["activation"]}'
                     c.node(str(n) * 3, label_dense, shape='rectangle', fontsize='18', color='white', fontcolor='black')
                     for j in range(0, hidden_layers[i]):
@@ -231,9 +230,6 @@ def visualizer(model, file_name='graph', file_format=None, view=False, settings=
             if model.layers[-1].__class__.__name__ == 'Dense':
                 output_units = model.layers[-1].output_shape[1]
                 label_dense_output = f'Выходные нейроны: {output_units}'
-                if max_neurons is not None and output_units > max_neurons:
-                    label_dense_output += f' (+{output_units - max_neurons} еще)'
-                    output_layer = max_neurons
                 label_dense_output += f'\nФункция активации: {model.layers[-1].get_config()["activation"]}'
                 c.node(str(n) * 3, label_dense_output, shape='rectangle', fontsize='18', color='white', fontcolor='black')
                 c.attr(color='white')
